@@ -9,10 +9,12 @@ const TabsLayout = () => {
         tabBarActiveTintColor: '#FF9C01', // Active tab icon color
         tabBarInactiveTintColor: '#CDCDE0', // Inactive tab icon color
         tabBarStyle: {
-          backgroundColor: '#161622', // Background color for the tab bar
-          elevation: 0, // Removes elevation for Android
-          shadowOpacity: 0, // Removes shadow for iOS
-        },
+          backgroundColor: '#161622', 
+          borderTopWidth: 1,
+          borderTopColor: "#232533",
+          
+          },
+           
       }}
     >
       {/* Home Tab */}

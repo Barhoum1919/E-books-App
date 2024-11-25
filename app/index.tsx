@@ -17,15 +17,15 @@ export default function App() {
         
       />
       </View>
-      <Text style={styles.title}><View className="relative mt-5">
-            <Text style={styles.Description} className="text-3xl text-white font-bold text-center">
+      <Text style={styles.title}><View >
+            <Text style={styles.Description} >
               Discover Endless{"\n"}
               Possibilities with{" "}
               <Text style={styles.name}>E-Books App </Text>
             </Text>
 </View></Text>
       
-      <CustomButton title={'Lets Get Started '} handlePress={()=> {router.push('/(auth)/sign-up')}}  textStyles={undefined} isLoading={undefined}></CustomButton>
+      <CustomButton title={"Let's Get Started "} handlePress={()=> {router.push('/(auth)/sign-up')}}  textStyles={undefined} isLoading={undefined}></CustomButton>
       </ScrollView>
       
     </SafeAreaView>
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
    
   },
   title: {
-    fontSize: 24,
+    fontSize: 50,
     fontWeight: "bold",
     marginBottom: 20,
     color: "#8C4540",
@@ -69,7 +69,8 @@ const styles = StyleSheet.create({
   },
   Description:{
     color:'white',
-    marginBottom:100
+    marginBottom:100,
+    fontSize:25
   },
   img:{
     
