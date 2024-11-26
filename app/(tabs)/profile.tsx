@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router"; // Use `useRouter` hook from expo-router
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const Profile = () => {
@@ -33,9 +33,20 @@ const Profile = () => {
       case "Settings":
         //router.push("/settings");
         break;
-      case "Logout":
-        router.push("/sign-in");
-        break;
+        case "Logout":
+          Alert.alert(
+            "Logout",
+            "Do you want to Log Out?",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "OK",
+                onPress: () => router.push("/sign-in"),
+              },
+            ],
+            { cancelable: true }
+          );
+          break;
       default:
         console.log("Unknown option selected");
     }

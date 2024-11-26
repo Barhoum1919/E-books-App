@@ -1,78 +1,147 @@
 import { useRouter, Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ImageBackground } from 'react-native';
+import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, UserCircleIcon } from 'react-native-heroicons/outline';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SignUp = () => {
-  const router = useRouter(); // Router for navigation
+  const router = useRouter();
 
   // State for form inputs
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [checkedPassword, setCheckedPassword] = useState('');
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isCheckedPasswordVisible, setIsCheckedPasswordVisible] = useState(false);
+  const [isChecked, setIsChecked] = useState(false); // Checkbox state
 
   const handleSignUp = () => {
-    // Example of a simple validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !checkedPassword) {
       alert('Please fill out all fields.');
       return;
     }
 
-    // Simulate a successful sign-up
+    if (password !== checkedPassword) {
+      setPasswordMismatch(true);
+      return;
+    }
+
+    setPasswordMismatch(false);
     alert('Sign-Up Successful!');
-    router.push('/home'); // Navigate to the home page
+    router.push('/home');
+  };
+
+  const handleGoogleSignUp = () => {
+    router.push('/home');
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up Please</Text>
+    
+      <ImageBackground source={require('../../assets/images/livre.png')} style={styles.container}>
+        <Text style={styles.title}>You're just one click away</Text>
+        {/*<Text style={styles.subtitle}>Sign Up</Text>*/}
 
-      {/* Name Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your name"
-        placeholderTextColor="#999"
-        value={name}
-        onChangeText={setName}
-      />
+        {/* Name Input */}
+        <View style={styles.inputContainer}>
+          <UserCircleIcon size={22} color="#FF9C01" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your name"
+            placeholderTextColor="#999"
+            value={name}
+            onChangeText={setName}
+          />
+        </View>
 
-      {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <EnvelopeIcon size={22} color="#FF9C01" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor="#999"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
 
-      {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        placeholderTextColor="#999"
-        secureTextEntry={true}
-        value={password}
-        onChangeText={setPassword}
-      />
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <KeyIcon size={22} color="#FF9C01" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#999"
+            secureTextEntry={!isPasswordVisible}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+            {isPasswordVisible ? (
+              <EyeIcon size={22} color="#FF9C01" style={styles.icon} />
+            ) : (
+              <EyeSlashIcon size={22} color="#FF9C01" style={styles.icon} />
+            )}
+          </TouchableOpacity>
+        </View>
 
-      {/* Sign Up Button */}
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <KeyIcon size={22} color="#FF9C01" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm your password"
+            placeholderTextColor="#999"
+            secureTextEntry={!isCheckedPasswordVisible}
+            value={checkedPassword}
+            onChangeText={setCheckedPassword}
+          />
+          <TouchableOpacity onPress={() => setIsCheckedPasswordVisible(!isCheckedPasswordVisible)}>
+            {isCheckedPasswordVisible ? (
+              <EyeIcon size={22} color="#FF9C01" style={styles.icon} />
+            ) : (
+              <EyeSlashIcon size={22} color="#FF9C01" style={styles.icon} />
+            )}
+          </TouchableOpacity>
+        </View>
 
-      {/* Link to Sign In Page */}
-      <View style={{
-         marginTop: 15,
-        flexDirection: 'row',
-      }}>
-      <Text style={{
-        color:'white'
-      }}>Already have an account? </Text>
-      <Link href="/sign-in" style={styles.link}>
-         Sign In
-      </Link>
-      </View>
-    </View>
+        {/* Password mismatch error message */}
+        {passwordMismatch && <Text style={styles.errorText}>Passwords do not match</Text>}
+
+        <TouchableOpacity style={styles.checkboxRow} onPress={() => setIsChecked(!isChecked)}>
+          <View style={[styles.checkbox, isChecked && styles.checkedCheckbox]} />
+          <Text style={styles.checkboxLabel}>
+            I agree to the <Text style={styles.linkText}>Terms and Policy</Text>.
+          </Text>
+        </TouchableOpacity>
+
+        {/* Sign Up Button */}
+        <TouchableOpacity
+          style={[styles.button, (!isChecked || passwordMismatch || !name || !email || !password) && styles.disabledButton]}
+          onPress={handleSignUp}
+          disabled={!isChecked ||!name || !email || !password || !checkedPassword }
+        >
+          <Text style={styles.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
+
+        {/* Google Sign Up Button */}
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignUp}>
+          <Image source={require('../../assets/images/google.png')} style={styles.googleImage} />
+          <Text style={styles.buttonTextGoogle}>Sign Up with Google</Text>
+        </TouchableOpacity>
+
+        {/* Link to Sign In Page */}
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkText}>Already have an account? </Text>
+          <Link href="/sign-in" style={styles.signInLink}>
+            Sign In
+          </Link>
+        </View>
+      </ImageBackground>
+    
   );
 };
 
@@ -82,24 +151,70 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#161622',
   },
   title: {
+    marginTop:15,
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#FF9C01",
-    alignItems: "center",
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#FF9C01',
+    textAlign: 'center',
   },
-  input: {
+  subtitle: {
+    fontSize: 20,
+    color: 'white',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     height: 50,
-    borderColor: '#FF9C01',
-    borderWidth: 3,
-    borderRadius: 8,
-    paddingHorizontal: 15,
     marginBottom: 15,
+    borderColor: '#FF9C01',
+    borderWidth: 2,
+    borderRadius: 25,
+    paddingHorizontal: 10,
     backgroundColor: '#fff',
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#161622',
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 17,
+    height: 17,
+    borderWidth: 2,
+    borderColor: '#FF9C01',
+    borderRadius: 4,
+    marginRight: 10,
+    backgroundColor: '#161622',
+    marginTop:3
+  },
+  checkedCheckbox: {
+    backgroundColor: '#FF9C01',
+  },
+  checkboxLabel: {
+    color: 'white',
+    fontSize: 16,
+  },
+  linkText: {
+    color: 'white',
+  },
+  signInLink: {
+    color: '#FF9C01',
+    textDecorationLine: 'none',
   },
   button: {
     width: '100%',
@@ -107,18 +222,45 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF9C01',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 25,
+    marginBottom: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#999',
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  link: {
-   
-    fontSize: 16,
-    color: '#FF9C01',
-    textDecorationLine: 'none',
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 20,
+    borderColor: '#FF9C01',
+    borderWidth: 1,
+  },
+  googleImage: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+  },
+  buttonTextGoogle: {
+    color: 'black',
+  },
+  linkContainer: {
+    flexDirection: 'row',
+    marginTop: 15,
+  },
+  errorText: {
+    textDecorationLine:'underline',
+    color: 'white',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
 

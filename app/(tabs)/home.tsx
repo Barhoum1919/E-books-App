@@ -23,7 +23,7 @@ const Home = () => {
     { id: "5", title: "War and Peace",cover: require("../../assets/images/book1.jpg") },
   ];
 
-  const allBooks = [
+  const allbooks = [
     { id: "1", title: "Pride and Prejudice", cover: require("../../assets/images/book1.jpg") },
     { id: "2", title: "The Catcher in the Rye", cover: require("../../assets/images/book2.jpg") },
     { id: "3", title: "Moby Dick", cover: require("../../assets/images/book3.jpg") },
@@ -71,7 +71,7 @@ const Home = () => {
 
       {/* Books List */}
       <FlatList
-        data={allBooks}
+        data={allbooks}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={() => (
           <View style={styles.header}>

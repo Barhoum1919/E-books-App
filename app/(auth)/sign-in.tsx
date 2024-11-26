@@ -1,68 +1,85 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,ImageBackground } from 'react-native';
+import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline'; // Import Eye icons from Heroicons
 
 const SignIn = () => {
-  const router = useRouter(); // Router for navigation
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const handleSignIn = () => {
     if (!email || !password) {
       alert('Please enter both email and password.');
       return;
     }
-
-    // Handle authentication logic here (e.g., API call)
     alert('Sign-In Successful!');
-    router.push('/home'); // Navigate to the home screen
+    router.push('/home'); // Navigate to home
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Please Fill The Login Form</Text>
+    <ImageBackground 
+    source={require('../../assets/images/livre.png')} 
+    style={styles.container}
+  >
+ 
+      <Text style={styles.title}>Log in and explore!</Text>
 
       {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <View style={styles.inputContainer}>
+        <EnvelopeIcon size={22} color="#FF9C01" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          placeholderTextColor="#999"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+      </View>
 
       {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        placeholderTextColor="#999"
-        secureTextEntry={true}
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.inputContainer}>
+  <KeyIcon size={22} color="#FF9C01" style={styles.icon} />
+  <TextInput
+    style={styles.input}
+    placeholder="Enter your password"
+    placeholderTextColor="#999"
+    secureTextEntry={!isPasswordVisible}  
+    value={password}
+    onChangeText={setPassword}
+  />
+  <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+    {isPasswordVisible ? (
+      <EyeIcon size={22} color="#FF9C01" style={styles.icon} />
+    ) : (
+      <EyeSlashIcon size={22} color="#FF9C01" style={styles.icon} />
+    )}
+  </TouchableOpacity>
+</View>
+
 
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+      <TouchableOpacity style={[styles.button, (!email || !password)  && styles.disabledButton]} onPress={handleSignIn}
+      disabled={ !email || !password }
+      
+      >
         <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
 
       {/* Link to Sign-Up Page */}
-      <View style={{
-       marginTop:15,
-       flexDirection: 'row',
-      }}>
-      <Text style={{
-        color:'white'
-      }}>Don't have an account?</Text>
-      <TouchableOpacity onPress={() => router.push('/sign-up')}>
-        <Text style={styles.link}> Sign Up</Text>
-      </TouchableOpacity>
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => router.push('/sign-up')}>
+          <Text style={styles.link}> Sign Up</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+   
+  </ImageBackground>
+    
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -70,24 +87,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#161622',
   },
   title: {
+    marginTop:15,
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#FF9C01",
-    alignItems: "center",
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#FF9C01',
+    textAlign: 'center',
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     height: 50,
     borderColor: '#FF9C01',
-    borderWidth: 3,
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderRadius: 25,  // Round the corners
+    paddingHorizontal: 20,
     marginBottom: 15,
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    paddingLeft: 10,
+    fontSize: 16,
+    color: '#161622',  // Dark color for better contrast
+  },
+  icon: {
+    marginRight: 15,
   },
   button: {
     width: '100%',
@@ -95,20 +128,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF9C01',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 25,  // Round the corners of the button
+    marginBottom: 20,
+    elevation: 4,  // Shadow for Android
+    shadowColor: '#000',  // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  signUpContainer: {
+    flexDirection: 'row',
+    marginTop: 9,
+  },
+  signUpText: {
+    
+    color: 'white',
+    
+  },
   link: {
     
-    fontSize: 16,
     color: '#FF9C01',
+    marginLeft: 5,
     textDecorationLine: 'none',
   },
-  
+  disabledButton:{
+    backgroundColor: '#999'
+  }
 });
 
 export default SignIn;
