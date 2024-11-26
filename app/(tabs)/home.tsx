@@ -9,21 +9,25 @@ import {
   RefreshControl,
   Image,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import { router } from "expo-router";
+import {  usePathname, router } from "expo-router";
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState(""); // State for search query
+  const pathname = usePathname();
+
 
   const trendingBooks = [
-    { id: "1", title: "The Great Gatsby" ,cover: require("../../assets/images/book1.jpg")},
-    { id: "2", title: "1984",cover: require("../../assets/images/book2.jpg") },
-    { id: "3", title: "To Kill a Mockingbird" ,cover: require("../../assets/images/book3.jpg")},
-    { id: "4", title: "Moby Dick",cover: require("../../assets/images/book4.jpg") },
-    { id: "5", title: "War and Peace",cover: require("../../assets/images/book1.jpg") },
+    { id: "1", title: "The Great Gatsby", cover: require("../../assets/images/book1.jpg") },
+    { id: "2", title: "1984", cover: require("../../assets/images/book2.jpg") },
+    { id: "3", title: "To Kill a Mockingbird", cover: require("../../assets/images/book3.jpg") },
+    { id: "4", title: "Moby Dick", cover: require("../../assets/images/book4.jpg") },
+    { id: "5", title: "War and Peace", cover: require("../../assets/images/book1.jpg") },
   ];
 
-  const allbooks = [
+  const allBooks = [
     { id: "1", title: "Pride and Prejudice", cover: require("../../assets/images/book1.jpg") },
     { id: "2", title: "The Catcher in the Rye", cover: require("../../assets/images/book2.jpg") },
     { id: "3", title: "Moby Dick", cover: require("../../assets/images/book3.jpg") },
@@ -34,6 +38,18 @@ const Home = () => {
     setRefreshing(true);
     // Simulate refreshing data
     setTimeout(() => setRefreshing(false), 1500);
+  };
+
+  const handleSearch = () => {
+    if (!query) {
+      Alert.alert("Please enter something to search for")
+    }
+    if (pathname.startsWith('/search'))
+      router.setParams({query})
+    else
+    router.push(`../search/${query}`);
+
+    
   };
 
   return (
@@ -55,12 +71,13 @@ const Home = () => {
       <View style={styles.searchBarContainer}>
         <TextInput
           style={styles.searchBar}
+          value={query}
+          onChangeText={setQuery}
           placeholder="Search for books..."
-          placeholderTextColor="#888"
+          placeholderTextColor="#FF9C01"
+          
         />
-        <TouchableOpacity onPress={() => {
-          router.push('/categories');
-        }}>
+        <TouchableOpacity onPress={handleSearch}>
           <Image
             source={require("../../assets/images/search.png")}
             style={styles.searchIcon}
@@ -71,7 +88,7 @@ const Home = () => {
 
       {/* Books List */}
       <FlatList
-        data={allbooks}
+        data={allBooks}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={() => (
           <View style={styles.header}>
@@ -97,17 +114,17 @@ const Home = () => {
         )}
         renderItem={({ item }) => (
           <View style={styles.bookItem}>
-            <Text style={styles.bookTitle}>{item.title}</Text>
             <TouchableOpacity
-          style={styles.cardContainer}
-          onPress={() => { /* Handle Press */ }}
->
-  <Image
-    source={item.cover}
-    style={styles.cardImage}
-    resizeMode="contain"
-  />
-</TouchableOpacity>
+              style={styles.cardContainer}
+              onPress={() => console.log(`${item.title} clicked`)}
+            >
+              <Image
+                source={item.cover}
+                style={styles.cardImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.bookTitle}>{item.title}</Text>
+            </TouchableOpacity>
           </View>
         )}
         refreshControl={
@@ -128,7 +145,6 @@ export default Home;
 
 const styles = StyleSheet.create({
   container: {
-    
     flex: 1,
     backgroundColor: "#161622",
   },
@@ -167,12 +183,12 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
     height: "100%",
-    color: "#333", // Text color
+    color: "#333",
   },
   searchIcon: {
     width: 20,
     height: 20,
-    tintColor: "#888", // Optional: Set icon color
+    tintColor: "#888",
     marginLeft: 8,
   },
   header: {
@@ -199,7 +215,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 150,
     borderRadius: 8,
-    marginLeft:22
   },
   trendingText: {
     marginTop: 8,
@@ -208,8 +223,7 @@ const styles = StyleSheet.create({
   },
   bookItem: {
     padding: 16,
-    justifyContent:'center',
-    alignItems:'center',
+    alignItems: "center",
     backgroundColor: "#161622",
     marginHorizontal: 16,
     marginBottom: 8,
@@ -220,8 +234,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   bookTitle: {
+    marginTop: 8,
     fontSize: 16,
-    color: "white",
+    color: "#FFF",
   },
   emptyState: {
     alignItems: "center",
@@ -232,27 +247,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#888",
   },
-  bookArticle:{
-    width:'100%',
-    height: 100 ,
-
-  },
   cardContainer: {
-    width: '100%', 
-    height: 350, 
-    marginTop: 12, 
-    borderRadius: 16, 
-    overflow: 'hidden', 
-    shadowColor: '#000',
+    width: "100%",
+    height: 200,
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 5, 
-   
+    elevation: 5,
   },
   cardImage: {
-    width: '100%', 
-    height: '100%', 
-    borderRadius: 16, 
+    width: "100%",
+    height: "100%",
   },
 });
