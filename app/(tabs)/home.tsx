@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FlatList,
@@ -9,49 +9,126 @@ import {
   RefreshControl,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
   Alert,
 } from "react-native";
-import {  usePathname, router } from "expo-router";
-
+import axios from "axios";
+import { router, usePathname } from "expo-router";
+import { FontAwesome } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState(""); // State for search query
+  const [trendingBooks, setTrendingBooks] = useState<any[]>([]);
+  const [allBooks, setAllBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  
   const pathname = usePathname();
 
+  useEffect(() => {
+    fetchTrendingBooks();
+    fetchAllBooks();
+  }, []);
 
-  const trendingBooks = [
-    { id: "1", title: "The Great Gatsby", cover: require("../../assets/images/book1.jpg") },
-    { id: "2", title: "1984", cover: require("../../assets/images/book2.jpg") },
-    { id: "3", title: "To Kill a Mockingbird", cover: require("../../assets/images/book3.jpg") },
-    { id: "4", title: "Moby Dick", cover: require("../../assets/images/book4.jpg") },
-    { id: "5", title: "War and Peace", cover: require("../../assets/images/book1.jpg") },
-  ];
+  const fetchTrendingBooks = async () => {
+    try {
+      const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
+        params: {
+          q: "arabic",
+          maxResults: 10,
+          filter: "free-ebooks",
+          key: "AIzaSyBqunAvVOl7RZWe0oAVOcU_LhevuP8TGeE",
+        },
+      });
+      setTrendingBooks(
+        response.data.items.map((item: any) => ({
+          id: item.id,
+          title: item.volumeInfo.title || "No Title found",
+          author: item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "No author found",
+          description: item.volumeInfo.description || "No Description found",
+          publishedDate: item.volumeInfo.publishedDate || "No Date Found",
+          cover: item.volumeInfo.imageLinks?.thumbnail || null,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching trending books:", error);
+    }
+  };
 
-  const allBooks = [
-    { id: "1", title: "Pride and Prejudice", cover: require("../../assets/images/book1.jpg") },
-    { id: "2", title: "The Catcher in the Rye", cover: require("../../assets/images/book2.jpg") },
-    { id: "3", title: "Moby Dick", cover: require("../../assets/images/book3.jpg") },
-    { id: "4", title: "War and Peace", cover: require("../../assets/images/book4.jpg") },
-  ];
+  const fetchAllBooks = async () => {
+    try {
+      const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
+        params: {
+          q: "all books",
+          maxResults: 10,
+          filter: "free-ebooks",
+          key: "AIzaSyBqunAvVOl7RZWe0oAVOcU_LhevuP8TGeE",
+        },
+      });
+      setAllBooks(
+        response.data.items.map((item: any) => ({
+          id: item.id,
+          title: item.volumeInfo.title || "No Title",
+          author: item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "No author found",
+          description: item.volumeInfo.description || "No Description found",
+          publishedDate: item.volumeInfo.publishedDate || "No Date Found",
+          cover: item.volumeInfo.imageLinks?.thumbnail || null,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching all books:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate refreshing data
-    setTimeout(() => setRefreshing(false), 1500);
+    await Promise.all([fetchTrendingBooks(), fetchAllBooks()]);
+    setRefreshing(false);
   };
 
   const handleSearch = () => {
     if (!query) {
-      Alert.alert("Please enter something to search for")
+      Alert.alert("Please enter something to search for");
+      return;
     }
-    if (pathname.startsWith('/search'))
-      router.setParams({query})
-    else
-    router.push(`../search/${query}`);
-
-    
+    if (pathname.startsWith('/search')) {
+      router.setParams({ query });
+    } else {
+      router.push(`/search/${query}`);
+    }
   };
 
+  const toggleFavorite = (bookId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(bookId)) {
+        newFavorites.delete(bookId);
+      } else {
+        newFavorites.add(bookId);
+      }
+      return newFavorites;
+    });
+  };
+
+  const handleSavedBookToggle = (bookId: string) => {
+    setSaved((prevSaved) => {
+      const newSaved = new Set(prevSaved);
+      if (newSaved.has(bookId)) {
+        newSaved.delete(bookId);  // Remove from saved
+      } else {
+        newSaved.add(bookId);  // Add to saved
+      }
+      return newSaved;
+    });
+  };
+  const handleBookPress = (bookId: string) => {
+    // Navigate to the Book details page with the bookId
+    router.push(`../book/${bookId}`);
+  };
   return (
     <SafeAreaView style={styles.container}>
       {/* Welcome Section */}
@@ -74,8 +151,7 @@ const Home = () => {
           value={query}
           onChangeText={setQuery}
           placeholder="Search for books..."
-          placeholderTextColor="#FF9C01"
-          
+          placeholderTextColor="#aaa"
         />
         <TouchableOpacity onPress={handleSearch}>
           <Image
@@ -86,57 +162,82 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Books List */}
-      <FlatList
-        data={allBooks}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => (
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Trending Books</Text>
-            <FlatList
-              data={trendingBooks}
-              horizontal
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.trendingItem}>
+      {loading ? (
+        <ActivityIndicator size="large" color="#FF9C01" />
+      ) : (
+        <FlatList
+          data={allBooks}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={() => (
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Trending Books</Text>
+              <FlatList
+                data={trendingBooks}
+                horizontal
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.trendingItem}>
+                    {item.cover && (
+                      <TouchableOpacity onPress={() => handleBookPress(item.id)} >
+                      <Image
+                        source={{ uri: item.cover }}
+                        style={styles.bookCover}
+                        resizeMode="contain"
+                      /></TouchableOpacity>
+                    )}
+                    <Text style={styles.trendingText}>{item.title}</Text>
+                    
+                  </View>
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+              <Text style={styles.headerSubtitle}>All Books</Text>
+            </View>
+          )}
+          renderItem={({ item }) => (
+            <View style={styles.bookItem}>
+              <TouchableOpacity
+                style={styles.cardContainer}
+                onPress={() => handleBookPress(item.id)}
+              >
+                {item.cover && (
                   <Image
-                    source={item.cover}
-                    style={styles.bookCover}
+                    source={{ uri: item.cover }}
+                    style={styles.cardImage}
                     resizeMode="contain"
                   />
-                  <Text style={styles.trendingText}>{item.title}</Text>
-                </View>
-              )}
-              showsHorizontalScrollIndicator={false}
-            />
-            <Text style={styles.headerSubtitle}>All Books</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.bookItem}>
-            <TouchableOpacity
-              style={styles.cardContainer}
-              onPress={() => console.log(`${item.title} clicked`)}
-            >
-              <Image
-                source={item.cover}
-                style={styles.cardImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.bookTitle}>{item.title}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={() => (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No books found</Text>
-          </View>
-        )}
-        showsVerticalScrollIndicator={false}
-      />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.bookTitle}>BookTitle: {item.title}</Text>
+              <Text style={styles.bookTitle}>Published Date: {item.publishedDate}</Text>
+             
+              <View style={styles.iconContainer}>
+                <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+                  <FontAwesome
+                    name={favorites.has(item.id) ? "heart" : "heart-o"}
+                    size={24}
+                    color={favorites.has(item.id) ? "red" : "white"}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleSavedBookToggle(item.id)}>
+                  <FontAwesome
+                    name={saved.has(item.id) ? "bookmark" : "bookmark-o"}
+                    size={24}
+                    color={saved.has(item.id) ? "#FF9001" : "white"}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No books found</Text>
+            </View>
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -192,7 +293,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 30,
     paddingHorizontal: 16,
   },
   headerTitle: {
@@ -208,58 +309,50 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   trendingItem: {
-    marginRight: 16,
+    marginRight: 30,
     alignItems: "center",
+    marginBottom:30
   },
   bookCover: {
     width: 100,
-    height: 150,
+    height: 140,
     borderRadius: 8,
   },
   trendingText: {
-    marginTop: 8,
-    fontSize: 12,
     color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   bookItem: {
     padding: 16,
-    alignItems: "center",
-    backgroundColor: "#161622",
-    marginHorizontal: 16,
-    marginBottom: 8,
+    backgroundColor: "#242430",
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    marginBottom: 16,
   },
   bookTitle: {
-    marginTop: 8,
     fontSize: 16,
     color: "#FFF",
+    marginBottom: 4,
   },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 50,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#888",
+  iconContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
   },
   cardContainer: {
-    width: "100%",
-    height: 200,
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
+    marginBottom: 10,
   },
   cardImage: {
     width: "100%",
-    height: "100%",
+    height: 160,
+    borderRadius: 8,
+  },
+  emptyState: {
+    alignItems: "center",
+    padding: 16,
+  },
+  emptyText: {
+    color: "#AAA",
   },
 });

@@ -19,6 +19,9 @@ const RootLayout = () => {
      <Stack.Screen name='search/[query]' options={{
       headerShown: false
      }}/>
+     <Stack.Screen name='book/[bookId]' options={{
+      headerShown: false
+     }}/>
     </Stack>
   );
 };

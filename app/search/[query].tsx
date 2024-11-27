@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity } from "react-native";
 import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 const Search = () => {
   const { query } = useLocalSearchParams();  
@@ -35,11 +35,13 @@ const Search = () => {
 
   const renderBookItem = ({ item }: { item: any }) => {  
     return (
-      <TouchableOpacity>
+      <TouchableOpacity onPress={()=>{
+        router.push(`/book/${item.id}`);
+      }}>
       <View style={styles.bookItem}>
         <Text style={styles.bookTitle}>{item.volumeInfo.title}</Text>
         <Text style={styles.bookAuthor}>
-          {item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "No authors listed"}
+          {item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "No author found"}
         </Text>
         {item.volumeInfo.imageLinks && (
           <Image
@@ -60,7 +62,10 @@ const Search = () => {
       </View>
     );
   }
-
+  const handleBookPress = (bookId: string) => {
+    // Navigate to the Book details page with the bookId
+    router.push(`../book/${bookId}`);
+  };
   return (
     <SafeAreaView style={styles.container} >
       <Text style={styles.title}>Search Results</Text>
