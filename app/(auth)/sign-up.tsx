@@ -1,4 +1,6 @@
 import { useRouter, Link } from 'expo-router';
+import { FIREBASE_AUTH } from '../../firebaseConfig'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ImageBackground } from 'react-native';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, UserCircleIcon } from 'react-native-heroicons/outline';
@@ -6,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SignUp = () => {
   const router = useRouter();
-
   // State for form inputs
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -16,8 +17,9 @@ const SignUp = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isCheckedPasswordVisible, setIsCheckedPasswordVisible] = useState(false);
   const [isChecked, setIsChecked] = useState(false); // Checkbox state
-
-  const handleSignUp = () => {
+  const [loading, setLoading] = useState(false); 
+  const auth =FIREBASE_AUTH  ; 
+  const handleSignUp = async () => {
     if (!name || !email || !password || !checkedPassword) {
       alert('Please fill out all fields.');
       return;
@@ -29,8 +31,20 @@ const SignUp = () => {
     }
 
     setPasswordMismatch(false);
-    alert('Sign-Up Successful!');
-    router.push('/home');
+    setLoading(true); 
+    try {
+      const response = await createUserWithEmailAndPassword(auth, email, password); 
+      console.log(response); 
+      router.push('/home'); // Navigate to home
+    } catch (error :any ) {
+      console.log(error); 
+      alert('Sign in failed : ' + error.message); 
+    }
+    finally {
+      setLoading(false); 
+    }
+    
+   
   };
 
   const handleGoogleSignUp = () => {

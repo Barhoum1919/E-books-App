@@ -5,9 +5,9 @@ import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Book = () => {
-  // Using useLocalSearchParams to access the bookId from the URL
-  const { bookId } = useLocalSearchParams(); 
+  const { bookId } = useLocalSearchParams(); // Access the bookId from the URL
   const [book, setBook] = useState<any | null>(null);
+  const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -19,7 +19,13 @@ const Book = () => {
   const fetchBookDetails = async (id: string | string[]) => {
     try {
       const response = await axios.get(`https://www.googleapis.com/books/v1/volumes/${id}`);
-      setBook(response.data.volumeInfo);
+      console.log(response.data);  
+      const bookData = response.data.volumeInfo;
+      setBook(bookData);  
+      
+      const epubLink = response.data.accessInfo?.epub?.downloadLink;
+      const pdfLink = response.data.accessInfo?.pdf?.downloadLink;
+      setDownloadLink(epubLink || pdfLink || null);
     } catch (error) {
       console.error("Error fetching book details:", error);
     } finally {
@@ -28,15 +34,15 @@ const Book = () => {
   };
 
   const handleDownload = async () => {
-    // Check if there's a valid epub or pdf download link in accessInfo
-    const epubLink = book?.accessInfo?.epub?.downloadLink;
-    //const pdfLink = book?.accessInfo?.pdf?.downloadLink;
-    Linking.openURL(epubLink);
-    
-      // Open the epub download link in the browser
-      
-    
-    
+    if (downloadLink) {
+      // If there is a download link, open it
+      Linking.openURL(downloadLink).catch((err) => {
+        console.error("Error opening the download link:", err);
+        alert("Unable to open the download link.");
+      });
+    } else {
+      alert("No download link available for this book.");
+    }
   };
 
   if (loading) {
@@ -70,32 +76,11 @@ const Book = () => {
         Published: {book.publishedDate}
       </Text>
       <Text style={styles.description}>{book.description}</Text>
-      
-      <Button 
-  title="Download Book" 
-  onPress={() => {
-    const epubLink = book?.accessInfo?.epub?.isAvailable ? book?.accessInfo?.epub?.downloadLink : null;
-    const pdfLink = book?.accessInfo?.pdf?.downloadLink; 
 
-    if (epubLink) {
-      Linking.openURL(epubLink).catch((err) => {
-        console.error("Error opening the EPUB link:", err);
-        alert("Unable to open the EPUB link.");
-      });
-    } else if (pdfLink) {
-      Linking.openURL(pdfLink).catch((err) => {
-        console.error("Error opening the PDF link:", err);
-        alert("Unable to open the PDF link.");
-      });
-    } else {
-      alert("No download link available for this book.");
-    }
-  }} 
-/>
-
-
-
-      
+      <Button
+        title="Download Book"
+        onPress={handleDownload}
+      />
     </SafeAreaView>
   );
 };
@@ -105,7 +90,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#161622", 
+    backgroundColor: "#161622",
     paddingTop: 20,
     paddingHorizontal: 10,
   },
@@ -118,21 +103,21 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
-    color:"white"
+    color: "white",
   },
   author: {
-    color:"white",
+    color: "white",
     fontSize: 18,
     marginBottom: 10,
   },
   publishedDate: {
     fontSize: 16,
     marginBottom: 10,
-    color:"white"
+    color: "white",
   },
   description: {
     fontSize: 14,
-    color: "#555",
+    color: "white",
   },
   loadingContainer: {
     flex: 1,

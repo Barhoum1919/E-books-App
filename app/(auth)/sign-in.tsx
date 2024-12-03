@@ -2,20 +2,29 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,ImageBackground } from 'react-native';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline'; // Import Eye icons from Heroicons
-
-const SignIn = () => {
-  const router = useRouter();
+import { FIREBASE_AUTH } from '../../firebaseConfig'; 
+import { signInWithEmailAndPassword } from 'firebase/auth';
+const SignIn = ()=> {
+  const router = useRouter(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  const handleSignIn = () => {
-    if (!email || !password) {
-      alert('Please enter both email and password.');
-      return;
+  const auth =FIREBASE_AUTH  ; 
+  const handleSignIn = async () => {
+    setLoading(true); 
+    try {
+      const response = await signInWithEmailAndPassword(auth, email, password); 
+      console.log(response); 
+      router.push('/home'); 
+    } catch (error :any ) {
+      console.log(error); 
+      alert('Sign in failed : ' + error.message); 
     }
-    alert('Sign-In Successful!');
-    router.push('/home'); // Navigate to home
+    finally {
+      setLoading(false); 
+    }
+    
   };
 
   return (

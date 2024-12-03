@@ -31,12 +31,18 @@ const Home = () => {
     fetchTrendingBooks();
     fetchAllBooks();
   }, []);
+  const books=[,
+    { id: "1", title: "USITC Publication",cover:"http://books.google.com/books/content?id=UbAWAQAAMAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api", pdf: require("../../assets/bookspdf/book2.pdf") },
+    { id: "cqCOO8kyZocC", title: "Agricultural Statistics",cover:"http://books.google.com/books/content?id=cqCOO8kyZocC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api", pdf: require("../../assets/bookspdf/book3.pdf") },
+    ,
+
+  ]
 
   const fetchTrendingBooks = async () => {
     try {
       const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
         params: {
-          q: "arabic",
+          q: "publishedDate=2024",
           maxResults: 10,
           filter: "free-ebooks",
           key: "AIzaSyBqunAvVOl7RZWe0oAVOcU_LhevuP8TGeE",
@@ -61,7 +67,7 @@ const Home = () => {
     try {
       const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
         params: {
-          q: "all books",
+          q: "isAvailable",
           maxResults: 10,
           filter: "free-ebooks",
           key: "AIzaSyBqunAvVOl7RZWe0oAVOcU_LhevuP8TGeE",
@@ -118,15 +124,15 @@ const Home = () => {
     setSaved((prevSaved) => {
       const newSaved = new Set(prevSaved);
       if (newSaved.has(bookId)) {
-        newSaved.delete(bookId);  // Remove from saved
+        newSaved.delete(bookId);  
       } else {
-        newSaved.add(bookId);  // Add to saved
+        newSaved.add(bookId);  
       }
       return newSaved;
     });
   };
   const handleBookPress = (bookId: string) => {
-    // Navigate to the Book details page with the bookId
+    
     router.push(`../book/${bookId}`);
   };
   return (
@@ -135,7 +141,7 @@ const Home = () => {
       <View style={styles.welcomeContainer}>
         <View>
           <Text style={styles.greetingText}>Welcome Back!</Text>
-          <Text style={styles.usernameText}>Ibrahim</Text>
+          <Text style={styles.usernameText}>Name</Text>
         </View>
         <Image
           source={require("../../assets/images/book_icon.png")}

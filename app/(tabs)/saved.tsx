@@ -7,7 +7,7 @@ const Saved = () => {
     { id: "1", title: "The Great Gatsby", cover: require("../../assets/images/book1.jpg") },
     { id: "2", title: "1984", cover: require("../../assets/images/book2.jpg") },
     { id: "3", title: "Sapiens", cover: require("../../assets/images/book3.jpg") },
-    { id: "4", title: "The Hobbit", cover: require("../../assets/images/book4.jpg") },
+    { id: "4", title: "The Hobbit", cover: require("../../assets/images/book4.jpg") }
   ];
 
   return (
@@ -16,7 +16,7 @@ const Saved = () => {
       <FlatList
         data={savedBooks}
         keyExtractor={(item) => item.id}
-        numColumns={2} // Display items in two columns
+        numColumns={2} 
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.bookCard}>
             <Image source={item.cover} style={styles.bookCover} resizeMode="cover" />
