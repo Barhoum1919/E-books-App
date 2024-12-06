@@ -5,7 +5,7 @@ import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Book = () => {
-  const { bookId } = useLocalSearchParams(); // Access the bookId from the URL
+  const { bookId } = useLocalSearchParams(); 
   const [book, setBook] = useState<any | null>(null);
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

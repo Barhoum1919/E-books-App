@@ -1,10 +1,11 @@
 import { useRouter, Link } from 'expo-router';
 import { FIREBASE_AUTH } from '../../firebaseConfig'; 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ImageBackground } from 'react-native';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, UserCircleIcon } from 'react-native-heroicons/outline';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SignUp = () => {
   const router = useRouter();
@@ -34,7 +35,11 @@ const SignUp = () => {
     setLoading(true); 
     try {
       const response = await createUserWithEmailAndPassword(auth, email, password); 
-      console.log(response); 
+      //console.log(response); 
+      await updateProfile(response.user, {
+        displayName: name, // Add the user's name here
+      });
+      AsyncStorage.removeItem("savedBooks");
       router.push('/home'); // Navigate to home
     } catch (error :any ) {
       console.log(error); 

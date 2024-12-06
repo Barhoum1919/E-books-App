@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,ImageBackground } from 'react-native';
-import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline'; // Import Eye icons from Heroicons
+import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline'; 
 import { FIREBASE_AUTH } from '../../firebaseConfig'; 
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const SignIn = ()=> {
   const router = useRouter(); 
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ const SignIn = ()=> {
     try {
       const response = await signInWithEmailAndPassword(auth, email, password); 
       console.log(response); 
+      AsyncStorage.removeItem("savedBooks");
       router.push('/home'); 
     } catch (error :any ) {
       console.log(error); 

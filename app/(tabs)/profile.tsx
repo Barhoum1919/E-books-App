@@ -1,15 +1,26 @@
-import { useRouter } from "expo-router"; // Use `useRouter` hook from expo-router
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { FIREBASE_AUTH } from '../../firebaseConfig'; 
 
 const Profile = () => {
-  const router = useRouter(); // Initialize router
-  const user = {
-    name: "Ibrahim Darghouthi",
-    email: "ibrahim.darghouthi@supcom.tn",
-    avatar: require("../../assets/images/logo.png"), // Replace with your image path
-  };
+  const router = useRouter();
+  
+  const [user, setUser] = useState<User | null>(null); 
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser); 
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe(); 
+  }, []);
 
   const options = [
     { id: "1", title: "Edit Profile", icon: "edit" },
@@ -22,42 +33,59 @@ const Profile = () => {
   const handleOptionPress = (option: string) => {
     switch (option) {
       case "Edit Profile":
-        //router.push("/edit-profile");
+        // router.push("/edit-profile");
         break;
       case "Favourite Books":
-       // router.push("/favourite-books");
+        // router.push("/favourite-books");
         break;
       case "Become an Author":
-       // router.push("/become-an-author");
+        // router.push("/become-an-author");
         break;
       case "Settings":
-        //router.push("/settings");
+        // router.push("/settings");
         break;
-        case "Logout":
-          Alert.alert(
-            "Logout",
-            "Do you want to Log Out?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "OK",
-                onPress: () => router.push("/sign-in"),
+      case "Logout":
+        Alert.alert(
+          "Logout",
+          "Do you want to Log Out?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "OK",
+              onPress: () => {
+                // Firebase logout action
+                signOut(FIREBASE_AUTH).then(() => {
+                  // After successful sign out, redirect to sign-in page
+                  router.push("/sign-in");  // Ensure this route exists
+                });
               },
-            ],
-            { cancelable: true }
-          );
-          break;
+            },
+          ],
+          { cancelable: true }
+        );
+        break;
       default:
         console.log("Unknown option selected");
     }
   };
 
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.noUserText}>Please log in to view your profile</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <Image source={user.avatar} style={styles.avatar} />
-        <Text style={styles.name}>{user.name}</Text>
+        <Image
+          source={user.photoURL ? { uri: user.photoURL } : require("../../assets/images/logo.png")}
+          style={styles.avatar}
+        />
+        <Text style={styles.name}>{user.displayName || "No Name"}</Text>
         <Text style={styles.email}>{user.email}</Text>
       </View>
 
@@ -80,8 +108,6 @@ const Profile = () => {
     </View>
   );
 };
-
-export default Profile;
 
 const styles = StyleSheet.create({
   container: {
@@ -111,6 +137,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#BBB",
   },
+  noUserText: {
+    fontSize: 20,
+    color: "#FFF",
+    textAlign: "center",
+    marginTop: 20,
+  },
   optionsContainer: {
     paddingBottom: 20,
     marginTop: 60,
@@ -132,3 +164,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+export default Profile;
