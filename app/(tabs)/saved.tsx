@@ -8,16 +8,23 @@ import {
   TouchableOpacity,
   RefreshControl,
   Platform,
-  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import PdfRendererView from 'react-native-pdf-renderer';
-import RNFS from 'react-native-fs'; 
-import { Linking } from "react-native";
+import WebView from 'react-native-webview';
+import { Iframe } from "@bounceapp/iframe"
+
 const Saved = () => {
   const [savedBooks, setSavedBooks] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
+  const fileName = 'bookspdf/book1.pdf';  // Relative path inside the assets folder
+  const fileUri =
+    Platform.OS === 'android'
+      ? `file:///assets/${fileName}`  
+      : require(`../../assets/${fileName}`);
+  const yourPdfURL=`https://docs.google.com/gview?embedded=true&url=https://www.orimi.com/pdf-test.pdf`;
+  
+
 
   // Fetch saved books from AsyncStorage
   const loadSavedBooks = async () => {
@@ -25,6 +32,8 @@ const Saved = () => {
       const storedBooks = await AsyncStorage.getItem("savedBooks");
       if (storedBooks) {
         setSavedBooks(JSON.parse(storedBooks));
+      } else {
+        setSavedBooks([]);
       }
     } catch (error) {
       console.error("Failed to load books from AsyncStorage:", error);
@@ -42,27 +51,41 @@ const Saved = () => {
   };
 
   const openPDF = () => {
-    const pdfUri:string= require("../../assets/bookspdf/book1.pdf");
-    if (Platform.OS === "web") {
-      // Open PDF in a new browser tab
-      window.open(pdfUri, "_blank");
-    } else if (Platform.OS === "ios" || Platform.OS === "android") {
-      // Use native PDF viewer
-      Linking.openURL("pdfUri");
-    } else {
-      Alert.alert("Unsupported Platform", "PDF viewing is not supported on this platform.");
-    }
+    setSelectedPDF(fileUri);
   };
 
-  /*if (selectedPDF) {
-    return (
-      <View style={styles.pdfContainer}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedPDF(null)}>
-          <Text style={styles.closeButtonText}>Close PDF</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }*/
+  if (selectedPDF) {
+    if (Platform.OS === "web") {
+      return (
+        <View style={styles.webPDFContainer}>
+          <iframe
+            src={selectedPDF}
+            style={styles.webPDFViewer}
+            title="PDF Viewer"
+          />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedPDF(null)}
+          >
+            <Text style={styles.closeButtonText}>Close PDF</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    } else if (Platform.OS === "ios" || Platform.OS === "android") {
+      return (
+        <View style={styles.nativePDFContainer}>
+           
+          <Iframe uri={yourPdfURL} style={{ flex: 1 , justifyContent:'center'}} />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedPDF(null)}
+          >
+            <Text style={styles.closeButtonText}>Close PDF</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -76,7 +99,7 @@ const Saved = () => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.bookCard}
-            onPress={() => openPDF()}
+            onPress={() => openPDF()}  // Assuming item.pdfUri stores the path to the PDF
           >
             {item.cover ? (
               <Image source={{ uri: item.cover }} style={styles.bookCover} resizeMode="cover" />
@@ -101,7 +124,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#161622",
     paddingHorizontal: 16,
-    paddingTop: 70,
+    paddingTop: Platform.OS === "android" ? 70 : 50,
   },
   header: {
     position: "absolute",
@@ -118,25 +141,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFF",
     textAlign: "center",
-  },
-  pdfContainer: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  pdfViewer: {
-    flex: 1,
-    margin: 10,
-  },
-  closeButton: {
-    marginTop:50,
-    backgroundColor: "#333",
-    padding: 10,
-    alignItems: "center",
-  },
-  closeButtonText: {
-
-    color: "#FFF",
-    fontSize: 16,
   },
   contentContainer: {
     paddingBottom: 20,
@@ -161,5 +165,42 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFF",
     textAlign: "center",
+  },
+  pdfContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    margin: 10,
+  },
+  pdfViewer: {
+    flex: 1,
+    margin: 10,
+  },
+  webPDFContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    padding: 10,
+  },
+  webPDFViewer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  closeButton: {
+    backgroundColor: "#333",
+    padding: 10,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+  },
+  nativePDFContainer: {
+    flex: 1,
+  },
+  nativePDFViewer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
 });

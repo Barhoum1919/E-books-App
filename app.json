@@ -24,17 +24,7 @@
     },
     "plugins": [
       "expo-router","@config-plugins/react-native-blob-util",
-      "@config-plugins/react-native-pdf",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-
-      ]
+      "@config-plugins/react-native-pdf"
     ],
     "experiments": {
       "typedRoutes": true
