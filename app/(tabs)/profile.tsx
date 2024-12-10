@@ -1,25 +1,23 @@
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Alert, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { FIREBASE_AUTH } from '../../firebaseConfig'; 
+import { FIREBASE_AUTH } from "../../firebaseConfig";
 
 const Profile = () => {
   const router = useRouter();
-  
-  const [user, setUser] = useState<User | null>(null); 
+
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser); 
-      } else {
-        setUser(null);
-      }
+      setUser(currentUser);
+      setIsLoading(false); // Stop loading after checking auth state
     });
 
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   const options = [
@@ -33,16 +31,16 @@ const Profile = () => {
   const handleOptionPress = (option: string) => {
     switch (option) {
       case "Edit Profile":
-        // router.push("/edit-profile");
+        router.push("../(screens)/profile/edit-profile");
         break;
       case "Favourite Books":
-        // router.push("/favourite-books");
+        router.push("../(screens)/profile/fav");
         break;
       case "Become an Author":
-        // router.push("/become-an-author");
+        router.push("../(screens)/profile/author");
         break;
       case "Settings":
-        // router.push("/settings");
+        router.push("../(screens)/profile/settings");
         break;
       case "Logout":
         Alert.alert(
@@ -53,10 +51,8 @@ const Profile = () => {
             {
               text: "OK",
               onPress: () => {
-                // Firebase logout action
                 signOut(FIREBASE_AUTH).then(() => {
-                  // After successful sign out, redirect to sign-in page
-                  router.push("/sign-in");  // Ensure this route exists
+                  router.push("../(auth)/sign-in");
                 });
               },
             },
@@ -68,6 +64,14 @@ const Profile = () => {
         console.log("Unknown option selected");
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#FFF" />
+      </View>
+    );
+  }
 
   if (!user) {
     return (
@@ -97,6 +101,7 @@ const Profile = () => {
           <TouchableOpacity
             style={styles.option}
             onPress={() => handleOptionPress(item.title)}
+            accessibilityLabel={`Navigate to ${item.title}`}
           >
             <Icon name={item.icon} size={24} color="#FFF" style={styles.optionIcon} />
             <Text style={styles.optionText}>{item.title}</Text>

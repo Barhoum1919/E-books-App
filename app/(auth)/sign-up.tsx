@@ -37,13 +37,14 @@ const SignUp = () => {
       const response = await createUserWithEmailAndPassword(auth, email, password); 
       //console.log(response); 
       await updateProfile(response.user, {
-        displayName: name, // Add the user's name here
+        displayName: name, 
       });
       AsyncStorage.removeItem("savedBooks");
-      router.push('/home'); // Navigate to home
+      AsyncStorage.removeItem("favBooks");
+      router.push('/home'); 
     } catch (error :any ) {
       console.log(error); 
-      alert('Sign in failed : ' + error.message); 
+      alert('Sign un failed : email taken try another  ' ); 
     }
     finally {
       setLoading(false); 

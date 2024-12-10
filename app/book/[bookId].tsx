@@ -11,8 +11,8 @@ const Book = () => {
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showIframe, setShowIframe] = useState<boolean>(false);
-  const [selectedText, setSelectedText] = useState<string>(""); // Selected text from the WebView
-  const [highlightedText, setHighlightedText] = useState<string[]>([]); // Store highlighted texts
+  const [selectedText, setSelectedText] = useState<string>(""); 
+  const [highlightedText, setHighlightedText] = useState<string[]>([]);
   const [notes, setNotes] = useState<string[]>([]); // Notes to save the highlighted text
   const webviewRef = useRef(null);
 
@@ -126,6 +126,7 @@ const Book = () => {
       ) : (
         <View style={styles.iframeContainer}>
           <WebView
+            originWhitelist={['*']}
             javaScriptEnabled={true}
             injectedJavaScript={injectJavaScriptToCaptureAndHighlightSelection}
             onMessage={onMessage}

@@ -26,7 +26,7 @@ const Home = () => {
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<any>>(new Set());
   const [saved, setSaved] = useState<Set<any>>(new Set());
 
   const pathname = usePathname();
@@ -48,10 +48,13 @@ const Home = () => {
   }, []);
   useEffect(() => {
     const loadFromStorage = async () => {
-      
+      const favBooks   = await AsyncStorage.getItem("favBooks");
       const savedBooks = await AsyncStorage.getItem("savedBooks");
       if (savedBooks) {
         setSaved(new Set(JSON.parse(savedBooks)));
+      }
+      if (favBooks){
+        setFavorites(new Set(JSON.parse(favBooks)))
       }
     };
     loadFromStorage();
@@ -59,12 +62,21 @@ const Home = () => {
 
   useEffect(() => {
     const saveToStorage = async () => {
-       
+      const favArray = Array.from(favorites)
       const savedArray = Array.from(saved); 
       await AsyncStorage.setItem("savedBooks", JSON.stringify(savedArray));
+      await AsyncStorage.setItem("favBooks", JSON.stringify(favArray));
     };
     saveToStorage();
   }, [saved]);
+  useEffect(() => {
+    const saveToStorage = async () => {
+      const favArray = Array.from(favorites)
+      await AsyncStorage.setItem("favBooks", JSON.stringify(favArray));
+    };
+    saveToStorage();
+  }, [favorites]);
+
   
   const fetchTrendingBooks = async () => {
     try {
@@ -136,13 +148,13 @@ const Home = () => {
     }
   };
 
-  const toggleFavorite = (bookId: string) => {
+  const toggleFavorite = (book: any) => {
     setFavorites((prev) => {
       const newFavorites = new Set(prev);
-      if (newFavorites.has(bookId)) {
-        newFavorites.delete(bookId);
+      if (newFavorites.has(book)) {
+        newFavorites.delete(book);
       } else {
-        newFavorites.add(bookId);
+        newFavorites.add(book);
       }
       return newFavorites;
     });
@@ -151,20 +163,23 @@ const Home = () => {
   const handleSavedBookToggle = (book: any) => {
     setSaved((prevSaved) => {
       const newSaved = new Set(prevSaved);
-      
-      // Manage the saved set (entire book object)
       if (newSaved.has(book)) {
-        newSaved.delete(book); // Remove book from the saved set
+        newSaved.delete(book); 
+        Alert.alert("Book Deleted from Saved");
       } else {
-        newSaved.add(book); // Add the entire book to the saved set
+        newSaved.add(book); 
+        Alert.alert("Book Added To Saved");
       }
   
       return newSaved;
     });
   };
-  
+  const isBookfav = (bookId: string) => {
+    
+    return Array.from(favorites).some(savedBook => savedBook.id === bookId);
+  };
   const isBookSaved = (bookId: string) => {
-    // Check if the book is in the saved set by book id
+    
     return Array.from(saved).some(savedBook => savedBook.id === bookId);
   };
   
@@ -255,11 +270,11 @@ const Home = () => {
               <Text style={styles.bookTitle}>BookTitle: {item.title}</Text>
               <Text style={styles.bookTitle}>Published Date: {item.publishedDate}</Text>
               <View style={styles.iconContainer}>
-                <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+                <TouchableOpacity onPress={() => toggleFavorite(item)}>
                   <FontAwesome
-                    name={favorites.has(item.id) ? "heart" : "heart-o"}
+                    name={isBookfav(item.id) ? "heart" : "heart-o"}
                     size={24}
-                    color={favorites.has(item.id) ? "red" : "white"}
+                    color={isBookfav(item.id) ? "red" : "white"}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleSavedBookToggle(item)}>

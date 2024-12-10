@@ -21,7 +21,7 @@ export default function App() {
             <Text style={styles.Description} >
               Discover Endless{"\n"}
               Possibilities with{" "}
-              <Text style={styles.name}>E-Books App </Text>
+              <Text style={styles.name}> E-Kitabi     </Text>
             </Text>
 </View></Text>
       

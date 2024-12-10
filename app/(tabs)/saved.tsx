@@ -22,7 +22,7 @@ const Saved = () => {
     Platform.OS === 'android'
       ? `file:///assets/${fileName}`  
       : require(`../../assets/${fileName}`);
-  const yourPdfURL=`https://docs.google.com/gview?embedded=true&url=https://www.orimi.com/pdf-test.pdf`;
+  const PdfURL=`https://mozilla.github.io/pdf.js/web/viewer.html?file=https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf`;
   
 
 
@@ -39,6 +39,44 @@ const Saved = () => {
       console.error("Failed to load books from AsyncStorage:", error);
     }
   };
+  const htmlContent = `
+  <html>
+    <head>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    </head>
+    <body>
+      <canvas id="pdf-canvas" style="width:100%; height:100vh;"></canvas>
+      <script>
+        const url = 'https://www.orimi.com/pdf-test.pdf'; // Update this URL to your desired PDF location
+  
+        // Set up the PDF.js worker
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+  
+        // Load the PDF document
+        pdfjsLib.getDocument(url).promise.then(function(pdfDoc) {
+          const canvas = document.getElementById('pdf-canvas');
+          const context = canvas.getContext('2d');
+  
+          // Get the first page of the PDF
+          pdfDoc.getPage(1).then(function(page) {
+            const viewport = page.getViewport({ scale: 1 });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+  
+            // Render the page on the canvas
+            page.render({ canvasContext: context, viewport: viewport });
+          }).catch(function(error) {
+            console.error('Error rendering page:', error);
+          });
+        }).catch(function(error) {
+          console.error('Error loading PDF:', error);
+        });
+      </script>
+    </body>
+  </html>
+  `;
+  
 
   useEffect(() => {
     loadSavedBooks();
@@ -58,11 +96,13 @@ const Saved = () => {
     if (Platform.OS === "web") {
       return (
         <View style={styles.webPDFContainer}>
-          <iframe
+          
+         <iframe
             src={selectedPDF}
             style={styles.webPDFViewer}
             title="PDF Viewer"
-          />
+          />  
+          {/**<Iframe uri={htmlContent} style={{ flex: 1 , justifyContent:'center', marginTop:50}} />*/}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setSelectedPDF(null)}
@@ -74,8 +114,12 @@ const Saved = () => {
     } else if (Platform.OS === "ios" || Platform.OS === "android") {
       return (
         <View style={styles.nativePDFContainer}>
-           
-          <Iframe uri={yourPdfURL} style={{ flex: 1 , justifyContent:'center'}} />
+           <WebView
+            originWhitelist={['*']}
+            source={{uri:PdfURL}}
+            style={styles.nativePDFViewer}
+          />
+           {/*<Iframe uri={yourPdfURL} style={{ flex: 1 , justifyContent:'center', marginTop:50}} />*/}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setSelectedPDF(null)}
@@ -99,7 +143,7 @@ const Saved = () => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.bookCard}
-            onPress={() => openPDF()}  // Assuming item.pdfUri stores the path to the PDF
+            onPress={() => openPDF()}  
           >
             {item.cover ? (
               <Image source={{ uri: item.cover }} style={styles.bookCover} resizeMode="cover" />
@@ -202,5 +246,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%",
+    justifyContent:'center', marginTop:40
   },
 });

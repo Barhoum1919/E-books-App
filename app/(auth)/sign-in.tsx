@@ -16,12 +16,13 @@ const SignIn = ()=> {
     setLoading(true); 
     try {
       const response = await signInWithEmailAndPassword(auth, email, password); 
-      console.log(response); 
+      //console.log(response); 
       AsyncStorage.removeItem("savedBooks");
+      AsyncStorage.removeItem("favBooks");
       router.push('/home'); 
     } catch (error :any ) {
-      console.log(error); 
-      alert('Sign in failed : ' + error.message); 
+      //console.log(error); 
+      alert('Sign in failed : User does not exist ' ); 
     }
     finally {
       setLoading(false); 

@@ -22,6 +22,9 @@ const RootLayout = () => {
      <Stack.Screen name='book/[bookId]' options={{
       headerShown: false
      }}/>
+     <Stack.Screen name='(screens)/profile' options={{
+      headerShown: false
+     }}/>
     </Stack>
   );
 };
