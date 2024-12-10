@@ -19,6 +19,7 @@ const SignIn = ()=> {
       //console.log(response); 
       AsyncStorage.removeItem("savedBooks");
       AsyncStorage.removeItem("favBooks");
+      AsyncStorage.removeItem("GlobalReadingTime");
       router.push('/home'); 
     } catch (error :any ) {
       //console.log(error); 

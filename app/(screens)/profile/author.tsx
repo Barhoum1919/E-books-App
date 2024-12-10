@@ -20,7 +20,7 @@ const BecomeAuthorScreen = () => {
         placeholderTextColor="#999"
       />
       
-      <TouchableOpacity  style={styles.Button} onPress={handleSave}><Text style={styles.ButtonText}>Submit Changes </Text></TouchableOpacity>
+      <TouchableOpacity  style={styles.Button} onPress={handleSave}><Text style={styles.ButtonText}>Submit Application </Text></TouchableOpacity>
     </View>
   );
 };

@@ -28,7 +28,7 @@ const Home = () => {
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState<Set<any>>(new Set());
   const [saved, setSaved] = useState<Set<any>>(new Set());
-
+  const [readingTime, setReadingTime] = useState<number>(0);
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null); 
   useEffect(() => {
@@ -46,6 +46,16 @@ const Home = () => {
 
     return () => unsubscribe(); 
   }, []);
+  
+  const loadReadingTime = async () => {
+    try {
+      const readingTime = await AsyncStorage.getItem('GlobalReadingTime');
+      setReadingTime(readingTime ? parseInt(readingTime, 10) : 0);  
+    } catch (error) {
+      console.error("Failed to load reading time:", error);
+    }
+  };
+  
   useEffect(() => {
     const loadFromStorage = async () => {
       const favBooks   = await AsyncStorage.getItem("favBooks");
@@ -59,13 +69,13 @@ const Home = () => {
     };
     loadFromStorage();
   }, []);
-
+  useEffect(() => {
+    loadReadingTime();
+  }, []);
   useEffect(() => {
     const saveToStorage = async () => {
-      const favArray = Array.from(favorites)
       const savedArray = Array.from(saved); 
       await AsyncStorage.setItem("savedBooks", JSON.stringify(savedArray));
-      await AsyncStorage.setItem("favBooks", JSON.stringify(favArray));
     };
     saveToStorage();
   }, [saved]);
@@ -75,7 +85,7 @@ const Home = () => {
       await AsyncStorage.setItem("favBooks", JSON.stringify(favArray));
     };
     saveToStorage();
-  }, [favorites]);
+  }, [favorites] );
 
   
   const fetchTrendingBooks = async () => {
@@ -132,7 +142,7 @@ const Home = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchTrendingBooks(), fetchAllBooks()]);
+    await Promise.all([fetchTrendingBooks(), fetchAllBooks(),loadReadingTime()]);
     setRefreshing(false);
   };
 
@@ -195,6 +205,9 @@ const Home = () => {
         <View>
           <Text style={styles.greetingText}>Welcome Back!</Text>
           <Text style={styles.usernameText}>{user?.displayName}</Text>
+          <Text style={styles.ReadingText}>Today's Reading : {Math.floor(readingTime / 60)}m {readingTime % 60}s
+            
+          </Text>
         </View>
         <Image
           source={require("../../assets/images/book_icon.png")}
@@ -318,6 +331,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#AAA",
   },
+  Timer:{
+    fontSize: 34,
+    color:"white"
+  },
   usernameText: {
     fontSize: 22,
     fontWeight: "600",
@@ -332,9 +349,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#161622",
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginVertical: 15,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingVertical:8,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: "#2C2C2E",
   },
@@ -372,9 +390,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   headerSubtitle: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: "bold",
     color: "white",
     marginLeft: 16,
+    marginTop:40
   },
   bookItem: {
     backgroundColor: "#2C2C2E",
@@ -404,4 +424,9 @@ const styles = StyleSheet.create({
   emptyText: {
     color: "white",
   },
+  ReadingText:{
+    color: "white",
+    fontSize:18,
+    fontWeight:"bold"
+  }
 });

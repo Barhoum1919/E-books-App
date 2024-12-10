@@ -8,79 +8,88 @@ import {
   TouchableOpacity,
   RefreshControl,
   Platform,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import WebView from 'react-native-webview';
-import { Iframe } from "@bounceapp/iframe"
+import WebView from "react-native-webview";
 
 const Saved = () => {
   const [savedBooks, setSavedBooks] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
-  const fileName = 'bookspdf/book1.pdf';  // Relative path inside the assets folder
-  const fileUri =
-    Platform.OS === 'android'
-      ? `file:///assets/${fileName}`  
-      : require(`../../assets/${fileName}`);
-  const PdfURL=`https://mozilla.github.io/pdf.js/web/viewer.html?file=https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf`;
-  
+  const [readingTime, setReadingTime] = useState<number>(0); 
+  const [globalReadingTime, setGlobalReadingTime] = useState<number>(0); 
+  const [timerId, setTimerId] = useState<ReturnType<typeof setInterval> | null>(null);
+  const PdfURL =
+    "https://mozilla.github.io/pdf.js/web/viewer.html?file=https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
 
+  // Load saved books and global reading time from AsyncStorage
+  useEffect(() => {
+    loadSavedBooks();
+    loadGlobalReadingTime();
 
-  // Fetch saved books from AsyncStorage
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, []);
+
   const loadSavedBooks = async () => {
     try {
       const storedBooks = await AsyncStorage.getItem("savedBooks");
-      if (storedBooks) {
-        setSavedBooks(JSON.parse(storedBooks));
-      } else {
-        setSavedBooks([]);
-      }
+      setSavedBooks(storedBooks ? JSON.parse(storedBooks) : []);
     } catch (error) {
       console.error("Failed to load books from AsyncStorage:", error);
     }
   };
-  const htmlContent = `
-  <html>
-    <head>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-    </head>
-    <body>
-      <canvas id="pdf-canvas" style="width:100%; height:100vh;"></canvas>
-      <script>
-        const url = 'https://www.orimi.com/pdf-test.pdf'; // Update this URL to your desired PDF location
-  
-        // Set up the PDF.js worker
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
-  
-        // Load the PDF document
-        pdfjsLib.getDocument(url).promise.then(function(pdfDoc) {
-          const canvas = document.getElementById('pdf-canvas');
-          const context = canvas.getContext('2d');
-  
-          // Get the first page of the PDF
-          pdfDoc.getPage(1).then(function(page) {
-            const viewport = page.getViewport({ scale: 1 });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-  
-            // Render the page on the canvas
-            page.render({ canvasContext: context, viewport: viewport });
-          }).catch(function(error) {
-            console.error('Error rendering page:', error);
-          });
-        }).catch(function(error) {
-          console.error('Error loading PDF:', error);
-        });
-      </script>
-    </body>
-  </html>
-  `;
-  
 
-  useEffect(() => {
-    loadSavedBooks();
-  }, []);
+  const loadGlobalReadingTime = async () => {
+    try {
+      const storedTime = await AsyncStorage.getItem("GlobalReadingTime");
+      setGlobalReadingTime(storedTime ? parseInt(storedTime, 10) : 0);
+    } catch (error) {
+      console.error("Failed to load global reading time:", error);
+    }
+  };
+
+  const saveGlobalReadingTime = async () => {
+    try {
+      const updatedTime = globalReadingTime + readingTime;
+      await AsyncStorage.setItem("GlobalReadingTime", updatedTime.toString());
+      setGlobalReadingTime(updatedTime);
+    } catch (error) {
+      console.error("Failed to save global reading time:", error);
+    }
+  };
+
+  const startReadingTimer = () => {
+    if (timerId) return; 
+    const timer = setInterval(() => {
+      setReadingTime((prev) => prev + 1);
+    }, 1000);
+    setTimerId(timer);
+  };
+
+  const stopReadingTimer = async () => {
+    if (timerId) {
+      clearInterval(timerId);
+      setTimerId(null);
+    }
+    try {
+      await saveGlobalReadingTime();
+      Alert.alert(
+        "Reading Paused",
+        `You spent: ${Math.floor(readingTime / 60)}m ${readingTime % 60}s reading`
+      );
+      setReadingTime(0); 
+    } catch (error) {
+      console.error("Failed to stop reading timer:", error);
+    }
+  };
+
+  const openPDF = async () => {
+    setSelectedPDF(PdfURL);
+    startReadingTimer();
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -88,47 +97,21 @@ const Saved = () => {
     setRefreshing(false);
   };
 
-  const openPDF = () => {
-    setSelectedPDF(fileUri);
-  };
-
   if (selectedPDF) {
-    if (Platform.OS === "web") {
-      return (
-        <View style={styles.webPDFContainer}>
-          
-         <iframe
-            src={selectedPDF}
-            style={styles.webPDFViewer}
-            title="PDF Viewer"
-          />  
-          {/**<Iframe uri={htmlContent} style={{ flex: 1 , justifyContent:'center', marginTop:50}} />*/}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedPDF(null)}
-          >
-            <Text style={styles.closeButtonText}>Close PDF</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    } else if (Platform.OS === "ios" || Platform.OS === "android") {
-      return (
-        <View style={styles.nativePDFContainer}>
-           <WebView
-            originWhitelist={['*']}
-            source={{uri:PdfURL}}
-            style={styles.nativePDFViewer}
-          />
-           {/*<Iframe uri={yourPdfURL} style={{ flex: 1 , justifyContent:'center', marginTop:50}} />*/}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedPDF(null)}
-          >
-            <Text style={styles.closeButtonText}>Close PDF</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+    return (
+      <View style={styles.pdfContainer}>
+        <WebView source={{ uri: PdfURL }} style={styles.pdfViewer} />
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            setSelectedPDF(null);
+            stopReadingTimer();
+          }}
+        >
+          <Text style={styles.closeButtonText}>Close PDF</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -141,12 +124,9 @@ const Saved = () => {
         keyExtractor={(item) => item.id}
         numColumns={2}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.bookCard}
-            onPress={() => openPDF()}  
-          >
+          <TouchableOpacity style={styles.bookCard} onPress={openPDF}>
             {item.cover ? (
-              <Image source={{ uri: item.cover }} style={styles.bookCover} resizeMode="cover" />
+              <Image source={{ uri: item.cover }} style={styles.bookCover} />
             ) : (
               <Text>No Cover Available</Text>
             )}
@@ -155,7 +135,9 @@ const Saved = () => {
         )}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
     </View>
   );
@@ -212,22 +194,11 @@ const styles = StyleSheet.create({
   },
   pdfContainer: {
     flex: 1,
-    backgroundColor: "#000",
-    margin: 10,
+    backgroundColor: "#000"
   },
   pdfViewer: {
     flex: 1,
-    margin: 10,
-  },
-  webPDFContainer: {
-    flex: 1,
-    backgroundColor: "#000",
-    padding: 10,
-  },
-  webPDFViewer: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
+    marginTop:45
   },
   closeButton: {
     backgroundColor: "#333",
@@ -238,14 +209,5 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "#FFF",
     fontSize: 16,
-  },
-  nativePDFContainer: {
-    flex: 1,
-  },
-  nativePDFViewer: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    justifyContent:'center', marginTop:40
   },
 });

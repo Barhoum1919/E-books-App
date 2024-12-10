@@ -35,7 +35,7 @@ const FavoritesScreen = () => {
   // Open PDF (this function needs to be implemented for opening a PDF file)
   const openPDF = (item: any) => {
     // Example of handling PDF opening (implement according to your requirements)
-    console.log(`Opening PDF for ${item.title}`);
+   // console.log(`Opening PDF for ${item.title}`);
   };
 
   return (
